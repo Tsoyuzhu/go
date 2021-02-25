@@ -33,6 +33,9 @@ class Board {
         // Get residing piece of a board position
         EnumPiece get_state(std::pair<int,int> position);
 
+        // Modify board state by applying a move
+        
+
         // Get neighbours of a position
         std::list<std::pair<int,int>> get_neighbouring_positions(std::pair<int,int> position);
 
@@ -40,15 +43,22 @@ class Board {
         std::list<Piece> get_neighbouring_pieces(std::pair<int,int> position);
 
         // Given a board state, return a set of all existing groups
+        std::list<Group> get_groups(EnumPiece * board_state);
         
         // Given a board state, return a set of all captured groups
-        std::list<Group> get_captured_groups(EnumPiece * board_state);
+        std::list<Group> get_captured_groups();
 
         // Determine whether a coordinate is present within a set of coordinates
         bool position_is_present(std::set<std::pair<int,int>> positions, std::pair<int,int> position);
 
-        // Remove groups from the board 
+        // Remove groups from the board
         void remove_groups(std::list<Group> groups);
+
+        // Given two board states, returns true if the states are equal
+        bool board_states_equal(EnumPiece* b1, EnumPiece* b2);
+
+        // Given a board state, board, modify cloned to be a deep clone of board
+        void clone_board_state(EnumPiece* board, EnumPiece* cloned);
 
     public:
         // Constructor
@@ -60,19 +70,19 @@ class Board {
         // Return board state
         EnumPiece* get_board_state();
 
-        // Modify board state by applying a move
-        void apply_move(Piece piece);
-
-        // Obtain all legal moves for a player
-        Piece* get_legal_moves(EnumPiece player);
+        void set_board_state(EnumPiece * board_state);
 
         // Returns true if the move is legal
         bool is_move_legal(Piece piece);
 
         // Move back after
-        std::list<Group> get_groups(EnumPiece * board_state);
+        void apply_move(Piece piece);
 
-        // 
+        // Print board state for debugging
+        void print_board(EnumPiece * board_state);
+
+        // Print groups for debugging
+        void print_groups();
 };      
 
 #endif

@@ -1,4 +1,4 @@
-#include "EnumPiece.h"
+#include "Piece.h"
 #include <set>
 #include <utility>
 
@@ -42,7 +42,7 @@ class Group {
         bool is_captured();
 
         // Returns true if the piece exists in the group
-        bool piece_is_present(std::pair<int,int>, EnumPiece pieceType);
+        bool piece_is_present(Piece piece);
 
         // Print all coordinates of pieces within the group
         void print_pieces(); 

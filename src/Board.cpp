@@ -11,17 +11,41 @@ bool Board::is_not_occupied(Piece piece) {
 }
 
 bool Board::is_not_self_capture(Piece piece) {
-    // to do
+    // Simulate the move and determine whether the move results in a self capture
+    EnumPiece simulated_state[this->size*this->size];
+    Board simulated_board = Board(this->size);
+    std::copy(this->board, this->board + (this->size * this->size), simulated_state);
+
+    // New board object contains the simulated board state
+    simulated_board.set_board_state(simulated_state);
+    simulated_board.apply_move(piece);
+    std::list<Group> captured_groups = simulated_board.get_captured_groups();
+    
+    // Check if piece is in a captured group
+    for (std::list<Group>::iterator it = captured_groups.begin(); it != captured_groups.end(); it++) {
+        if (it->piece_is_present(piece)) {
+            std::cout << "move is a self capture\n";
+            return false;
+        }
+    }
+    std::cout << "move is not self capture\n";
     return true;
 }
 
 bool Board::results_in_ko(Piece piece) {
-    // to do
-    return true;
+    // Simulate the move on a fake board
+    EnumPiece clone[this->size * this->size] ;
+    this->clone_board_state(this->board, clone);
+    return this->board_states_equal(clone,this->prev_state);
 }
 
 EnumPiece Board::get_state(std::pair<int,int> position) {
     return this->board[(position.second * size) + position.first];
+}
+
+void Board::apply_move(Piece piece) {
+    // Unsafe. Does not check for out of bounds access. Only use in conjunction with is_move_legal().
+    this->board[(piece.get_position().second * size) + piece.get_position().first] = piece.get_piece();
 }
 
 std::list<std::pair<int,int>> Board::get_neighbouring_positions(std::pair<int,int> position) {
@@ -134,8 +158,8 @@ std::list<Group> Board::get_groups(EnumPiece * board_state) {
     return groups;
 }
 
-std::list<Group> Board::get_captured_groups(EnumPiece* board_state) {
-    std::list<Group> groups = get_groups(board_state);
+std::list<Group> Board::get_captured_groups() {
+    std::list<Group> groups = get_groups(this->board);
     std::list<Group> captured_groups;
 
     // Should implement a cleaner filtering operation
@@ -157,6 +181,32 @@ bool Board::position_is_present(std::set<std::pair<int,int>> positions, std::pai
     return false;
 }
 
+void Board::remove_groups(std::list<Group> groups) {
+    for (std::list<Group>::iterator it_g = groups.begin(); it_g != groups.end(); it_g++) {
+        for (std::set<std::pair<int,int>>::iterator it_p = it_g->get_pieces().begin(); it_p != it_g->get_pieces().end(); it_p++) {
+            // Set board position to empty
+            this->apply_move(Piece(*it_p, empty));
+        }
+    }
+}
+
+bool Board::board_states_equal(EnumPiece* b1, EnumPiece* b2) {
+    // Naive and brute force but always constant time since board size is constant
+    int board_size = this->size;
+    for (int x = 0; x < board_size; x++) {
+        for (int y = 0; y < board_size; y++) {
+            if (b1[y * board_size + x] == b2[y * board_size + x]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void Board::clone_board_state(EnumPiece* board, EnumPiece* cloned) {
+    memcpy(cloned, board, sizeof(EnumPiece) * this->size * this->size);
+}
+
 // Public Methods
 Board::Board(int size) {
     this->size = size;
@@ -176,20 +226,58 @@ EnumPiece* Board::get_board_state() {
     return this->board;
 }
 
-void Board::apply_move(Piece piece) {
-    // Unsafe. Does not check for out of bounds access. Only use in conjunction with is_move_legal().
-    this->board[(piece.get_position().second * size) + piece.get_position().first] = piece.get_piece();
-}
-
-Piece* Board::get_legal_moves(EnumPiece player) {
-    return nullptr;
+void Board::set_board_state(EnumPiece * board_state) {
+    this->board = board_state;
 }
 
 bool Board::is_move_legal(Piece piece) {
+    // if (!move_within_bounds(piece.get_position())) std::cout << "out of bounds";
+    // if (!is_not_occupied(piece)) std::cout << "position occupied";
+    // if (!is_not_self_capture(piece)) std::cout << "is a self capture";
+    // if (results_in_ko(piece)) std::cout << "results_in_ko";
     return (
-        move_within_bounds(piece.get_position()) 
+        move_within_bounds(piece.get_position())
         && is_not_occupied(piece) 
         && is_not_self_capture(piece) 
         && !results_in_ko(piece)
     );
+}
+
+void Board::print_board(EnumPiece* board_state) {
+    int board_size = this->size;
+    std::cout << "\n";
+    for (int y = 0; y < board_size; y++) {
+        for (int x = 0; x < board_size; x++) {
+            if (board_state[y * board_size + x] == empty) {
+                std::cout << ".";
+            } else if(board_state[y * board_size + x] == black) {
+                std::cout << "X";
+            } else if(board_state[y * board_size + x] == white) {
+                std::cout << "o";
+            } else {
+                std::cout << "?";
+            }
+            std::cout << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
+}
+
+void Board::print_groups() {
+    std::list<Group> groups = this->get_groups(this->get_board_state());
+    for (std::list<Group>::iterator it = groups.begin(); it != groups.end(); it++) {
+        std::cout << "Pieces in group\n";
+        it->print_pieces();
+        std::cout << "Liberties in group\n";
+        it->print_liberties();
+        std::cout << "Group is ";
+        if (it->is_captured()) {
+            std:: cout << "captured\n";
+        } else {
+            std:: cout << "not captured\n";
+        }
+        std::cout << "\n";
+    }
+
 }

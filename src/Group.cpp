@@ -32,13 +32,13 @@ bool Group::is_captured() {
     return this->liberties.size() == 0;
 }
 
-bool Group::piece_is_present(std::pair<int,int> position, EnumPiece pieceType) {
-    if (pieceType != this->pieceType) {
+bool Group::piece_is_present(Piece piece) {
+    if (piece.get_piece() != this->pieceType) {
         return false;
     }
     // Duplication of position_is_present in Board class. 
     for(std::set<std::pair<int,int>>::iterator it = this->pieces.begin(); it != this->pieces.end(); it++) {
-        if (it->first == position.first && it->second == position.second) {
+        if (it->first == piece.get_position().first && it->second == piece.get_position().second) {
             return true;
         }
     }
